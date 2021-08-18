@@ -4,5 +4,5 @@ plugins {
 
 dependencies {
     api 'io.github.ititus:ititus-commons:1.5.9'
-    implementation 'it.unimi.dsi:fastutil:8.5.2'
+    implementation 'it.unimi.dsi:fastutil:8.5.4'
 }
