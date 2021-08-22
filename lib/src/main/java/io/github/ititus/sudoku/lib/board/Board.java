@@ -113,11 +113,10 @@ public class Board {
     public void solve() {
         if (!isSolved()) {
             logic();
-        }
-
-        if (!isSolved()) {
-            // TODO: backtrack
-            throw new UnsupportedOperationException("backtracking not supported yet");
+            if (!isSolved()) {
+                // TODO: backtrack
+                throw new UnsupportedOperationException("backtracking not supported yet");
+            }
         }
     }
 
