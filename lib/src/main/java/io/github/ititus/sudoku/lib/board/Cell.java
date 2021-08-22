@@ -65,6 +65,10 @@ public final class Cell {
         return possibilitiesView;
     }
 
+    public boolean hasPossibility(Number n) {
+        return possibilities.contains(n);
+    }
+
     public boolean isEmpty() {
         return number.isEmpty();
     }
