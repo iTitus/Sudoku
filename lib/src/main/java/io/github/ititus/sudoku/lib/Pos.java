@@ -1,7 +1,5 @@
 package io.github.ititus.sudoku.lib;
 
-import io.github.ititus.sudoku.lib.board.Board;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,13 +12,13 @@ public record Pos(
 ) {
 
     public Pos {
-        if (x < 0 || x >= Board.SIZE || y < 0 || y >= Board.SIZE) {
+        if (x < 0 || x >= SIZE || y < 0 || y >= SIZE) {
             throw new IllegalArgumentException();
         }
     }
 
     public int index() {
-        return x + y * Board.SIZE;
+        return x + y * SIZE;
     }
 
     public List<Pos> allGroups() {

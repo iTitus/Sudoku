@@ -6,7 +6,9 @@ import io.github.ititus.sudoku.lib.Pos;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Board {
 
@@ -14,9 +16,16 @@ public class Board {
     public static final int BLOCK_SIZE = 3;
 
     private final Cell[] cells;
+    private final Set<Pos> openPos;
 
     private Board() {
         this.cells = new Cell[SIZE * SIZE];
+        this.openPos = new HashSet<>();
+        for (int y = 0; y < SIZE; y++) {
+            for (int x = 0; x < SIZE; x++) {
+                set(new Pos(x, y), Cell.empty());
+            }
+        }
     }
 
     public static Board loadVisual(String name) {
@@ -88,19 +97,17 @@ public class Board {
         }
 
         cells[pos.index()] = cell;
+        if (cell.isPresent()) {
+            openPos.remove(pos);
+        } else {
+            openPos.add(pos);
+        }
+
         return true;
     }
 
     public boolean isSolved() {
-        for (int y = 0; y < SIZE; y++) {
-            for (int x = 0; x < SIZE; x++) {
-                if (get(new Pos(x, y)).isEmpty()) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
+        return openPos.isEmpty();
     }
 
     public void solve() {
@@ -110,11 +117,12 @@ public class Board {
 
         if (!isSolved()) {
             // TODO: backtrack
+            throw new UnsupportedOperationException("backtracking not supported yet");
         }
     }
 
     private void logic() {
-        while (true) {
+        while (!isSolved()) {
             if (simple()) {
                 continue;
             }
@@ -137,13 +145,17 @@ public class Board {
             for (int x = 0; x < SIZE; x++) {
                 Pos pos = new Pos(x, y);
                 Cell cell = get(pos);
-                if (cell.isPresent()) {
-                    for (Pos other : pos.allGroups()) {
-                        Cell otherCell = get(other);
-                        if (otherCell.isEmpty()) {
-                            change |= set(other, otherCell.withRemovedPossibility(cell.number()));
-                        }
+                if (cell.isEmpty()) {
+                    continue;
+                }
+
+                for (Pos other : pos.allGroups()) {
+                    Cell otherCell = get(other);
+                    if (otherCell.isPresent()) {
+                        continue;
                     }
+
+                    change |= set(other, otherCell.withRemovedPossibility(cell.number()));
                 }
             }
         }
@@ -278,5 +290,16 @@ public class Board {
 
             out.println();
         }
+    }
+
+    public String encode() {
+        StringBuilder b = new StringBuilder(SIZE * SIZE);
+        for (int y = 0; y < SIZE; y++) {
+            for (int x = 0; x < SIZE; x++) {
+                b.append(get(new Pos(x, y)).number().number());
+            }
+        }
+
+        return b.toString();
     }
 }

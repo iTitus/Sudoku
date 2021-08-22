@@ -9,6 +9,8 @@ import java.util.Set;
 
 public final class Cell {
 
+    private static final Cell EMPTY = new Cell(Number.NONE, Number.VALID);
+
     private final Number number;
     private final Set<Number> possibilities;
     private Set<Number> possibilitiesView;
@@ -23,7 +25,7 @@ public final class Cell {
     }
 
     public static Cell empty() {
-        return new Cell(Number.NONE, Number.VALID);
+        return EMPTY;
     }
 
     public static Cell of(Number number) {
