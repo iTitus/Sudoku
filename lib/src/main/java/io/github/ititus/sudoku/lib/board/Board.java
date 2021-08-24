@@ -1,19 +1,20 @@
 package io.github.ititus.sudoku.lib.board;
 
+import io.github.ititus.data.pair.Pair;
 import io.github.ititus.sudoku.lib.Number;
 import io.github.ititus.sudoku.lib.Pos;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class Board {
 
     public static final int SIZE = 9;
     public static final int BLOCK_SIZE = 3;
+
+    private static final boolean ZERO_FOR_EMPTY = false;
+    private static final boolean SPACES = true;
 
     private final Cell[] cells;
     private final Set<Pos> openPos;
@@ -28,6 +29,11 @@ public class Board {
         }
     }
 
+    private Board(Cell[] cells, Set<Pos> openPos) {
+        this.cells = cells;
+        this.openPos = openPos;
+    }
+
     public static Board loadVisual(String name) {
         if (!name.startsWith("/")) {
             name = "/" + name;
@@ -40,23 +46,30 @@ public class Board {
 
         Board b = new Board();
         try (is; BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-            List<String> lines = br.lines().toList();
+            List<String> lines = br.lines().filter(l -> !l.isEmpty() && !l.startsWith("#")).toList();
+            if (lines.size() == 1) {
+                String line = lines.get(0);
+                if (line.length() == SIZE * SIZE) {
+                    return fromEncoded(line);
+                }
+            }
+
             int y = 0;
             for (String line : lines) {
                 if (y >= SIZE) {
                     throw new RuntimeException();
-                } else if (line.isBlank() || line.startsWith("#")) {
-                    continue;
                 }
 
-                String[] split = line.split(" ");
-                if (split.length != SIZE) {
-                    throw new RuntimeException();
-                }
-
-                for (int x = 0; x < SIZE; x++) {
-                    int n = Integer.parseInt(split[x]);
-                    b.set(new Pos(x, y), Cell.of(Number.of(n)));
+                if (line.length() == SIZE) {
+                    for (int x = 0; x < SIZE; x++) {
+                        char c = line.charAt(x);
+                        b.set(new Pos(x, y), Cell.of(Number.of(c == ' ' ? 0 : c - '0')));
+                    }
+                } else if (line.length() == 2 * SIZE - 1) {
+                    for (int x = 0; x < SIZE; x++) {
+                        char c = line.charAt(2 * x);
+                        b.set(new Pos(x, y), Cell.of(Number.of(c == ' ' ? 0 : c - '0')));
+                    }
                 }
 
                 y++;
@@ -75,12 +88,8 @@ public class Board {
 
         Board b = new Board();
         for (int i = 0; i < SIZE * SIZE; i++) {
-            int n = encoded.charAt(i) - '0';
-            if (n < 0 || n > SIZE) {
-                throw new IllegalArgumentException();
-            }
-
-            b.set(new Pos(i % SIZE, i / SIZE), Cell.of(Number.of(n)));
+            char c = encoded.charAt(i);
+            b.set(new Pos(i % SIZE, i / SIZE), Cell.of(Number.of(c == ' ' ? 0 : c - '0')));
         }
 
         return b;
@@ -114,8 +123,7 @@ public class Board {
         if (!isSolved()) {
             logic();
             if (!isSolved()) {
-                // TODO: backtrack
-                throw new UnsupportedOperationException("backtracking not supported yet");
+                backtrack();
             }
         }
     }
@@ -151,6 +159,10 @@ public class Board {
                 for (Pos other : pos.allGroups()) {
                     Cell otherCell = get(other);
                     if (otherCell.isPresent()) {
+                        if (otherCell.number() == cell.number() && !other.equals(pos)) {
+                            throw new RuntimeException();
+                        }
+
                         continue;
                     }
 
@@ -273,6 +285,41 @@ public class Board {
         return change;
     }
 
+    private void backtrack() {
+        Pair<Pos, Cell> posCellPair = openPos.stream()
+                .map(p -> Pair.of(p, get(p)))
+                .min(Comparator.comparingInt((Pair<Pos, Cell> p) -> p.b().numberOfPossibilities()).thenComparingInt((Pair<Pos, Cell> p) -> p.a().index()))
+                .orElseThrow();
+
+        Pos pos = posCellPair.a();
+        Cell cell = posCellPair.b();
+        for (Number possibility : cell.possibilities()) {
+            Board copy = copy();
+            copy.set(pos, Cell.of(possibility));
+
+            try {
+                copy.solve();
+            } catch (Exception ignored) {
+                continue;
+            }
+
+            for (int y = 0; y < SIZE; y++) {
+                for (int x = 0; x < SIZE; x++) {
+                    Pos p = new Pos(x, y);
+                    set(p, copy.get(p));
+                }
+            }
+
+            return;
+        }
+
+        throw new RuntimeException();
+    }
+
+    public Board copy() {
+        return new Board(Arrays.copyOf(cells, cells.length), new HashSet<>(openPos));
+    }
+
     public void print() {
         print(System.out);
     }
@@ -280,11 +327,16 @@ public class Board {
     public void print(PrintStream out) {
         for (int y = 0; y < SIZE; y++) {
             for (int x = 0; x < SIZE; x++) {
-                if (x > 0) {
+                if (SPACES && x > 0) {
                     out.print(' ');
                 }
 
-                out.print(get(new Pos(x, y)).number().number());
+                Number n = get(new Pos(x, y)).number();
+                if (ZERO_FOR_EMPTY || n.isPresent()) {
+                    out.print(n.number());
+                } else {
+                    out.print(' ');
+                }
             }
 
             out.println();

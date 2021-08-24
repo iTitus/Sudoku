@@ -67,6 +67,10 @@ public final class Cell {
         return possibilitiesView;
     }
 
+    public int numberOfPossibilities() {
+        return possibilities.size();
+    }
+
     public boolean hasPossibility(Number n) {
         return possibilities.contains(n);
     }

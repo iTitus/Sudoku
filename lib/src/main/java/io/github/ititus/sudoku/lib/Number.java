@@ -1,8 +1,8 @@
 package io.github.ititus.sudoku.lib;
 
-import io.github.ititus.sudoku.lib.board.Board;
-
 import java.util.*;
+
+import static io.github.ititus.sudoku.lib.board.Board.SIZE;
 
 public enum Number {
 
@@ -12,7 +12,7 @@ public enum Number {
     public static final List<Number> VALUES = List.of(values());
 
     public static Number of(int n) {
-        if (n < 0 || n > Board.SIZE) {
+        if (n < 0 || n > SIZE) {
             throw new NoSuchElementException();
         }
 
