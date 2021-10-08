@@ -99,4 +99,9 @@ public final class Cell {
     public int hashCode() {
         return Objects.hash(number, possibilities);
     }
+
+    @Override
+    public String toString() {
+        return "Cell{" + (number.isPresent() ? number : possibilities) + '}';
+    }
 }

@@ -13,6 +13,9 @@ public class Board {
     public static final int SIZE = 9;
     public static final int BLOCK_SIZE = 3;
 
+    private static final boolean DO_LOGGING = false;
+    private static final boolean LOG_ONLY_NUMBERS = true;
+
     private static final boolean ZERO_FOR_EMPTY = false;
     private static final boolean SPACES = true;
 
@@ -129,6 +132,7 @@ public class Board {
     }
 
     private void logic() {
+        log("Logic Start");
         while (!isSolved()) {
             if (simple()) {
                 continue;
@@ -166,7 +170,17 @@ public class Board {
                         continue;
                     }
 
-                    change |= set(other, otherCell.withRemovedPossibility(cell.number()));
+                    Cell newCell = otherCell.withRemovedPossibility(cell.number());
+                    if (set(other, newCell)) {
+                        if (LOG_ONLY_NUMBERS) {
+                            if (newCell.isPresent()) {
+                                log("Simple@" + other + ": " + newCell);
+                            }
+                        } else {
+                            log("Simple@" + other + ": " + otherCell + " -> " + newCell);
+                        }
+                        change = true;
+                    }
                 }
             }
         }
@@ -216,7 +230,18 @@ public class Board {
             }
 
             if (singlePos != null) {
-                change |= set(singlePos, Cell.of(n));
+                Cell oldCell = get(singlePos);
+                Cell newCell = Cell.of(n);
+                if (set(singlePos, newCell)) {
+                    if (LOG_ONLY_NUMBERS) {
+                        if (newCell.isPresent()) {
+                            log("Intermediate@" + singlePos + ": " + newCell);
+                        }
+                    } else {
+                        log("Intermediate@" + singlePos + ": " + oldCell + " -> " + newCell);
+                    }
+                    change = true;
+                }
             }
         }
 
@@ -279,13 +304,24 @@ public class Board {
                 continue;
             }
 
-            change |= set(pos, cell.withRemovedPossibility(n));
+            Cell newCell = cell.withRemovedPossibility(n);
+            if (set(pos, newCell)) {
+                if (LOG_ONLY_NUMBERS) {
+                    if (newCell.isPresent()) {
+                        log("Advanced@" + pos + ": " + newCell);
+                    }
+                } else {
+                    log("Advanced@" + pos + ": " + cell + " -> " + newCell);
+                }
+                change = true;
+            }
         }
 
         return change;
     }
 
     private void backtrack() {
+        log("Backtrack Start");
         Pair<Pos, Cell> posCellPair = openPos.stream()
                 .map(p -> Pair.of(p, get(p)))
                 .min(Comparator.comparingInt((Pair<Pos, Cell> p) -> p.b().numberOfPossibilities()).thenComparingInt((Pair<Pos, Cell> p) -> p.a().index()))
@@ -296,10 +332,12 @@ public class Board {
         for (Number possibility : cell.possibilities()) {
             Board copy = copy();
             copy.set(pos, Cell.of(possibility));
+            log("Backtrack Set@" + pos + ": " + possibility);
 
             try {
                 copy.solve();
             } catch (Exception ignored) {
+                log("Backtrack Reset@" + pos + ": " + possibility);
                 continue;
             }
 
@@ -352,5 +390,11 @@ public class Board {
         }
 
         return b.toString();
+    }
+
+    private static void log(String s) {
+        if (DO_LOGGING) {
+            System.out.println(s);
+        }
     }
 }
