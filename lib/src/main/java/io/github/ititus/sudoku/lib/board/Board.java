@@ -1,6 +1,6 @@
 package io.github.ititus.sudoku.lib.board;
 
-import io.github.ititus.data.pair.Pair;
+import io.github.ititus.commons.data.pair.Pair;
 import io.github.ititus.sudoku.lib.Number;
 import io.github.ititus.sudoku.lib.Pos;
 

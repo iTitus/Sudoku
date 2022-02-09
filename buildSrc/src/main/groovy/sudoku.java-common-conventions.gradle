@@ -5,7 +5,13 @@ plugins {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(16)
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+idea {
+    module {
+        inheritOutputDirs = true
     }
 }
 
@@ -14,18 +20,12 @@ repositories {
 }
 
 dependencies {
-    testImplementation platform('org.junit:junit-bom:5.8.0')
+    testImplementation platform('org.junit:junit-bom:5.8.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
-    testImplementation 'org.assertj:assertj-core:3.21.0'
-    testImplementation 'org.mockito:mockito-core:4.0.0'
+    testImplementation 'org.assertj:assertj-core:3.22.0'
+    testImplementation 'org.mockito:mockito-core:4.3.1'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
-}
-
-idea {
-    module {
-        inheritOutputDirs = true
-    }
 }
