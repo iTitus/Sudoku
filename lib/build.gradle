@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-    api 'io.github.ititus:ititus-commons:2.2.3'
+    api 'io.github.ititus:ititus-commons:2.3.1'
 }
